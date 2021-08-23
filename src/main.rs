@@ -1,4 +1,7 @@
+// Output
+
 use structopt::StructOpt;
+use anyhow::{Context, Result};
 //use std::fs::File;
 //use std::io::{BufReader, BufRead};
 
@@ -12,7 +15,13 @@ struct Cli {
 }
 
 
-fn main() {
+/* 
+ * Box<dyn std::error::Error> is also an interesting type. 
+ * It’s a Box that can contain any type that implements the standard Error trait. 
+ * This means that basically all errors can be put into this box, 
+ * so we can use ? on all of the usual functions that return Results.
+*/
+fn main() -> Result<()> {
     let args = Cli::from_args();
     println!("{:?}", args);
 
@@ -25,16 +34,17 @@ fn main() {
     //        println!("{}", line);
     //    }
     //}
-
-    let content = std::fs::read_to_string(&args.path)
-        .expect("could not read file");
-    
+    let path = "tett.txt";
+    let content = std::fs::read_to_string(path)
+        .with_context(|| format!("could not read file `{}`", path))?;
     
     for line in content.lines() {
         if line.contains(&args.pattern) {
             println!("{}", line);
         }
     }
+
+    Ok(())
 
 
 
