@@ -1,51 +1,93 @@
-// Output
-
+use std::io;
+use std::fs;
+use std::fmt;
+use std::env;
+use std::path::Path;
 use structopt::StructOpt;
-use anyhow::{Context, Result};
-//use std::fs::File;
-//use std::io::{BufReader, BufRead};
+// use std::str::FromStr;
+
+/*
+ * Structs get camel case.
+ * Variables get snake case.
+ * Constants get all upper case.
+*/
 
 
-#[derive(StructOpt)]
 #[derive(Debug)]
+#[derive(StructOpt)]
 struct Cli {
-    pattern: String,
-    #[structopt(parse(from_os_str))]
-    path: std::path::PathBuf,
+    // #[structopt(short = "pa", long = "path", default_value = ".")]
+    #[structopt(default_value = ".")]
+    path: String,
+    // path_type: String,
 }
 
+fn print_dir_content(dir: &Path) -> io::Result<()> {
+    if dir.is_dir() {
+        for entry in fs::read_dir(dir)? {
+            let entry = entry?;
+            let path = entry.path();
+            let kak = entry.file_name().into_string();
+            // let file_name = entry
+			// 			.file_name()
+			// 			.into_string()
+			// 			.or_else(|f| Err(format!("Invalid entry: {:?}", f)))?;
+            // println!("{}", file_name);
 
-/* 
- * Box<dyn std::error::Error> is also an interesting type. 
- * It’s a Box that can contain any type that implements the standard Error trait. 
- * This means that basically all errors can be put into this box, 
- * so we can use ? on all of the usual functions that return Results.
-*/
-fn main() -> Result<()> {
-    let args = Cli::from_args();
-    println!("{:?}", args);
-
-    // TODO: use BufReader instead of read_to_string
-    //let f = File::open(&args.path);
-    //let reader = BufReader::new(f.unwrap());
-
-    //for line in reader.lines() {
-    //    if line.contains(&args.pattern) {
-    //        println!("{}", line);
-    //    }
-    //}
-    let path = "tett.txt";
-    let content = std::fs::read_to_string(path)
-        .with_context(|| format!("could not read file `{}`", path))?;
-    
-    for line in content.lines() {
-        if line.contains(&args.pattern) {
-            println!("{}", line);
+            println!("{:?}", kak.unwrap());
         }
     }
+    Ok(())
+}
+
+/*
+*
+* Goal: ls
+*
+*/
+fn main() -> std::io::Result<()> {
+    let args = Cli::from_args();
+    // println!("{:?}", args);
+    
+    let path = env::current_dir()?;
+    println!("The current directory is {}", path.display());
+
+    print_dir_content(Path::new(&args.path)).expect("Something went wrong.");
 
     Ok(())
-
-
-
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// #[derive(Debug)]
+// enum PathType {
+//     Rel,
+//     Abs
+// }
+
+// impl FromStr for PathType {
+//     type Err = Infallible;
+//     fn from_str(pathType: &str) -> Result<Self, Self::Err> {
+//         match pathType {
+//             "rel" => Ok(PathType::Rel),
+//             "abs" => Ok(PathType::Abs),
+//             _ => Err("Could not parse a path type"),
+//         }
+//     }
+// }
