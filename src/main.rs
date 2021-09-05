@@ -1,93 +1,48 @@
+extern crate chrono;
+
 use std::io;
 use std::fs;
-use std::fmt;
-use std::env;
 use std::path::Path;
 use structopt::StructOpt;
-// use std::str::FromStr;
-
-/*
- * Structs get camel case.
- * Variables get snake case.
- * Constants get all upper case.
-*/
-
+use chrono::{DateTime, Local};
 
 #[derive(Debug)]
 #[derive(StructOpt)]
 struct Cli {
-    // #[structopt(short = "pa", long = "path", default_value = ".")]
     #[structopt(default_value = ".")]
     path: String,
-    // path_type: String,
 }
 
 fn print_dir_content(dir: &Path) -> io::Result<()> {
     if dir.is_dir() {
         for entry in fs::read_dir(dir)? {
             let entry = entry?;
-            let path = entry.path();
-            let kak = entry.file_name().into_string();
-            // let file_name = entry
-			// 			.file_name()
-			// 			.into_string()
-			// 			.or_else(|f| Err(format!("Invalid entry: {:?}", f)))?;
-            // println!("{}", file_name);
+            let metadata = entry.metadata().unwrap();
+            let modified: DateTime<Local> = DateTime::from(metadata.modified()?);
+            let size = metadata.len();
+            let file_name = entry.file_name().into_string();
 
-            println!("{:?}", kak.unwrap());
+            println!(
+                "{:>10} {} {}",
+                size,
+                modified.format("%_d %b %H:%M").to_string(),
+                file_name.unwrap(),
+            );
         }
     }
     Ok(())
 }
 
 /*
-*
-* Goal: ls
-*
+* 
+* https://endler.dev/2018/ls/
+* usage: 'cargo run -- .'
+* 
 */
 fn main() -> std::io::Result<()> {
     let args = Cli::from_args();
-    // println!("{:?}", args);
     
-    let path = env::current_dir()?;
-    println!("The current directory is {}", path.display());
-
     print_dir_content(Path::new(&args.path)).expect("Something went wrong.");
 
     Ok(())
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// #[derive(Debug)]
-// enum PathType {
-//     Rel,
-//     Abs
-// }
-
-// impl FromStr for PathType {
-//     type Err = Infallible;
-//     fn from_str(pathType: &str) -> Result<Self, Self::Err> {
-//         match pathType {
-//             "rel" => Ok(PathType::Rel),
-//             "abs" => Ok(PathType::Abs),
-//             _ => Err("Could not parse a path type"),
-//         }
-//     }
-// }
